@@ -436,7 +436,7 @@ class Certificado(object):
         return xml
 
     def assina_xml(self, xml, URI='', numero_assinatura=0, doctype='', atributo='Id', tag='', namespaces={},
-                   formatado=False):
+                   formatado=False, metodo='sha1', assinar_raiz=False):
         if not formatado:
             xml = tira_formatacao(xml)
 
@@ -458,8 +458,9 @@ class Certificado(object):
             #URI = referencia.attrib['URI']
             #if URI and URI[0] == '#':
                 #URI = URI[1:]
-
-        if URI:
+        if assinar_raiz:
+            a_assinar = doc_xml
+        elif URI:
             a_assinar = doc_xml.xpath("//*[@" + atributo + "='" + URI + "']")
             a_assinar = a_assinar[0]
             a_assinar = a_assinar.getparent()
@@ -473,10 +474,16 @@ class Certificado(object):
             #if assinatura.getparent() == a_assinar:
                 #a_assinar.remove(assinatura)
 
+        signature_algorithm = 'rsa-sha1'
+        digest_algorithm = 'sha1'
+        if metodo == 'sha256':
+            signature_algorithm = 'rsa-sha256'
+            digest_algorithm = 'sha256'
+
         assinador = signxml.XMLSigner(
             method=signxml.methods.enveloped,
-            signature_algorithm='rsa-sha1',
-            digest_algorithm='sha1',
+            signature_algorithm=signature_algorithm,
+            digest_algorithm=digest_algorithm,
             c14n_algorithm='http://www.w3.org/TR/2001/REC-xml-c14n-20010315'
         )
         assinador.namespaces = {None: assinador.namespaces['ds']}
